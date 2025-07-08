@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # copies single buckets into da-content/<bucket-name>
-# input is list.txt, output is done-copy.txt
+# input is list-copy.txt, output is done-copy.txt
 
 START_ALL=$(date +%s)
 
@@ -39,7 +39,7 @@ sync_bucket() {
 export -f sync_bucket
 
 # Read bucket names and run up to 5 in parallel
-cat list.txt | xargs -n1 -P5 -I{} bash -c 'sync_bucket "$@"' _ {}
+cat list-copy.txt | xargs -n1 -P5 -I{} bash -c 'sync_bucket "$@"' _ {}
 
 END_ALL=$(date +%s)
 TOTAL_DURATION=$((END_ALL-START_ALL))
