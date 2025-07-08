@@ -16,7 +16,7 @@ sync_bucket() {
   DST="hlx-r2:da-content/${BUCKET_NAME}"
 
   # Run rclone copy with progress, forward all output to log file
-  if ! rclone copy "$SRC" "$DST" -v --progress --transfers 100 --inplace --no-check-dest --fast-list --checkers 32 > "$LOG_FILE" 2>&1; then
+  if ! rclone copy -v --progress --transfers 100 --inplace --no-check-dest --fast-list --checkers 32 "$SRC" "$DST" > "$LOG_FILE" 2>&1; then
     echo "[${BUCKET_NAME}] Error copying. See $LOG_FILE for details." >&2
   else
     END_TIME=$(date +%s)
