@@ -24,3 +24,17 @@ Ask me or Chris for ACCES_KEY, SECRET_ACCESS_KEY and ACCOUNT_ID (2x, one set per
 `./copy.sh` makes a full copy of a bucket from `cm-r2` to `hlx-r2`
 
 `./resync.sh` makes a sync of the diff between the 2 buckets but in one direction only: from `cm-r2` to `hlx-r2`
+
+## Useful
+
+### Get the size of a bucket
+
+```
+rclone size --fast-list --checkers 32 cm-r2:adobecom-content
+```
+
+### Get the size of a folder in a bucket
+
+```
+rclone size --fast-list --checkers 32 hlx-r2:da-content/adobecom 
+```
