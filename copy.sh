@@ -22,7 +22,7 @@ sync_bucket() {
   DST="hlx-r2:aem-content/${BUCKET_NAME}"
 
   # Start rclone in the background
-  rclone copy -vv --dump headers --log-file="$DUMP_FILE" --progress --transfers 100 --inplace --no-check-dest --fast-list --checkers 100 "$SRC" "$DST" > "$LOG_FILE" 2>&1 &
+  rclone copy --transfers 1000 --checkers 1000 -vv --dump headers --log-file="$DUMP_FILE" --progress --inplace --no-check-dest --fast-list --metadata --ignore-size "$SRC" "$DST" > "$LOG_FILE" 2>&1 &
   RCLONE_PID=$!
 
   # Monitor the dump file for changes in the foreground
