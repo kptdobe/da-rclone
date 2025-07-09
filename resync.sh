@@ -65,7 +65,6 @@ sync_bucket() {
     return 0
   else
     echo "[${BUCKET_NAME}] Resync ended with error or was killed. (Duration: ${DURATION}s)" >&2
-    rm -f "$LOG_FILE" "$DUMP_FILE"
     return 1
   fi
 }
