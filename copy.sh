@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# copies single buckets into da-content/<bucket-name>
+# copies single buckets into aem-content/<bucket-name>
 # input is list-copy.txt, output is done-copy.txt
 
 START_ALL=$(date +%s)
@@ -10,29 +10,57 @@ echo "Starting sync for all buckets at $(date)"
 sync_bucket() {
   BUCKET_NAME="$1"
   LOG_FILE="log-copy-${BUCKET_NAME}.txt"
+  DUMP_FILE="dump-copy-${BUCKET_NAME}.txt"
   START_TIME=$(date +%s)
-  echo "[${BUCKET_NAME}] Sync started at $(date)"
+  echo "[${BUCKET_NAME}] Copy started at $(date)"
   SRC="cm-r2:${BUCKET_NAME}-content"
-  DST="hlx-r2:da-content/${BUCKET_NAME}"
+  DST="hlx-r2:aem-content/${BUCKET_NAME}"
 
-  # Run rclone copy with progress, forward all output to log file
-  if ! rclone copy -v --progress --transfers 100 --inplace --no-check-dest --fast-list --checkers 32 "$SRC" "$DST" > "$LOG_FILE" 2>&1; then
-    echo "[${BUCKET_NAME}] Error copying. See $LOG_FILE for details." >&2
-  else
-    END_TIME=$(date +%s)
-    DURATION=$((END_TIME-START_TIME))
-    # Extract transferred size and number of files from log
-    TRANSFERRED_SIZE=$(grep 'Transferred:' "$LOG_FILE" | grep -E 'B|KiB|MiB|GiB' | tail -1 | awk '{print $2, $3}')
-    NUM_FILES=$(grep 'Transferred:' "$LOG_FILE" | grep -vE 'B|KiB|MiB|GiB' | tail -1 | awk '{print $4}' | tr -d ',')
+  # Start rclone in the background
+  rclone copy -vv --dump headers --log-file="$DUMP_FILE" --progress --transfers 100 --inplace --no-check-dest --fast-list --checkers 100 "$SRC" "$DST" > "$LOG_FILE" 2>&1 &
+  RCLONE_PID=$!
+
+  # Monitor the dump file for changes in the foreground
+  TIMEOUT=0
+  while kill -0 $RCLONE_PID 2>/dev/null; do
+    if [ -f "$DUMP_FILE" ]; then
+      NOW=$(date +%s)
+      MODIFIED=$(stat -f %m "$DUMP_FILE")
+      AGE=$((NOW - MODIFIED))
+      if [ $AGE -ge 15 ]; then
+        echo "[${BUCKET_NAME}] Dump file unchanged for 15s, killing rclone (PID $RCLONE_PID)" >&2
+        kill $RCLONE_PID
+        wait $RCLONE_PID 2>/dev/null
+        echo "[${BUCKET_NAME}] Copy killed due to inactivity (timeout)."
+        TIMEOUT=1
+        break
+      fi
+    fi
+    sleep 2
+  done
+
+  wait $RCLONE_PID
+  STATUS=$?
+  END_TIME=$(date +%s)
+  DURATION=$((END_TIME-START_TIME))
+  TRANSFERRED_SIZE=$(grep 'Transferred:' "$LOG_FILE" | grep -E 'B|KiB|MiB|GiB' | tail -1 | awk '{print $2, $3}')
+  NUM_FILES=$(grep 'Transferred:' "$LOG_FILE" | grep -vE 'B|KiB|MiB|GiB' | tail -1 | awk '{print $4}' | tr -d ',')
+
+  if [ "$TIMEOUT" -eq 1 ]; then
+    echo "$BUCKET_NAME, ${DURATION}s, $TRANSFERRED_SIZE, $NUM_FILES, TIMEOUT" >> done-copy.txt
+    rm -f "$LOG_FILE" "$DUMP_FILE"
+    return 0
+  elif [ $STATUS -eq 0 ]; then
     echo "[${BUCKET_NAME}] Copy completed successfully."
     echo "$BUCKET_NAME, ${DURATION}s, $TRANSFERRED_SIZE, $NUM_FILES" >> done-copy.txt
     echo "[${BUCKET_NAME}] Copy ended at $(date) (Duration: ${DURATION}s)"
-    rm -f "$LOG_FILE"
-    return
+    rm -f "$LOG_FILE" "$DUMP_FILE"
+    return 0
+  else
+    echo "[${BUCKET_NAME}] Copy ended with error or was killed. (Duration: ${DURATION}s)" >&2
+    rm -f "$LOG_FILE" "$DUMP_FILE"
+    return 1
   fi
-  END_TIME=$(date +%s)
-  DURATION=$((END_TIME-START_TIME))
-  echo "[${BUCKET_NAME}] Copy ended at $(date) (Duration: ${DURATION}s)"
 }
 
 # Export the function for use in subshells

@@ -36,5 +36,5 @@ rclone size --fast-list --checkers 32 cm-r2:adobecom-content
 ### Get the size of a folder in a bucket
 
 ```
-rclone size --fast-list --checkers 32 hlx-r2:da-content/adobecom 
+rclone size --fast-list --checkers 32 hlx-r2:aem-content/adobecom 
 ```

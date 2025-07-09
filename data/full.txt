@@ -23,12 +23,6 @@ adobe-commerce
 adobe
 adobe-devx
 adobe-rnd
-adobe-summit
-adobe-summit-l320
-adobe-summit-l321
-adobe-summit-l322
-adobe-summit-l322-test
-adobe-summt-l322
 adobe-tucker-elliott
 adobe-tv-helix
 adobecom
@@ -36,8 +30,6 @@ adobedevxsc
 adobedixon
 adobedome
 adobestore
-adobesummit
-adoecom
 adr
 adrianb-ens
 adriano-orlando
@@ -217,13 +209,11 @@ cxstudios
 cy2000-tech
 cyber64-engineering
 d-kretschmann-dotsource
-da-all
 da-bacom-blog
 da-e2e-test
 da-helpx
 da-pilot
 da-self-service
-da-sites
 da-testautomation
 danidll
 dankhrapiyush
