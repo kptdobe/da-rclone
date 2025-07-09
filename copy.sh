@@ -1,7 +1,12 @@
 #!/bin/bash
 
 # copies single buckets into aem-content/<bucket-name>
-# input is list-copy.txt, output is done-copy.txt
+
+if [ -z "$1" ]; then
+  echo "Usage: $0 <LIST_FILE> (e.g., ./copy.sh list-copy.txt)" >&2
+  exit 1
+fi
+LIST_FILE="$1"
 
 START_ALL=$(date +%s)
 
@@ -66,7 +71,7 @@ sync_bucket() {
 export -f sync_bucket
 
 # Read bucket names and run up to 5 in parallel
-cat list-copy.txt | xargs -n1 -P5 -I{} bash -c 'sync_bucket "$@"' _ {}
+cat "$LIST_FILE" | xargs -n1 -P5 -I{} bash -c 'sync_bucket "$@"' _ {}
 
 END_ALL=$(date +%s)
 TOTAL_DURATION=$((END_ALL-START_ALL))

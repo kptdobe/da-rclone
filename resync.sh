@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # re-syncs buckets that have changed in the last <MAX_AGE>
-# input is list-resync.txt, output is done-resync.txt
 
-if [ -z "$1" ]; then
-  echo "Usage: $0 <MAX_AGE> (e.g., 10m, 1h, 2d)" >&2
+if [ -z "$1" ] || [ -z "$2" ]; then
+  echo "Usage: $0 <LIST_FILE> <MAX_AGE> (e.g., ./resync.sh list-resync.txt 10m)" >&2
   exit 1
 fi
-MAX_AGE="$1"
+LIST_FILE="$1"
+MAX_AGE="$2"
 export MAX_AGE
 
 START_ALL=$(date +%s)
@@ -73,7 +73,7 @@ sync_bucket() {
 export -f sync_bucket
 
 # Read bucket names and run up to 5 in parallel
-cat list-resync.txt | xargs -n1 -P5 -I{} bash -c 'sync_bucket "$@"' _ {}
+cat "$LIST_FILE" | xargs -n1 -P5 -I{} bash -c 'sync_bucket "$@"' _ {}
 
 END_ALL=$(date +%s)
 TOTAL_DURATION=$((END_ALL-START_ALL))
