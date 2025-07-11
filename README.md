@@ -25,6 +25,8 @@ Ask me or Chris for ACCES_KEY, SECRET_ACCESS_KEY and ACCOUNT_ID (2x, one set per
 
 `./resync.sh list.txt 24h` makes a sync of the diff between the 2 buckets but in one direction only: from `cm-r2` to `hlx-r2`. list.txt is the list of bucket names (one per line, no "-content"). Time filters files to copy (modified in the last 24h...).
 
+`./copyone.sh <bucketname> <file_path>` copies one file from `cm-r2` single bucket to `hlx-r2` `aem-content` bucket.
+
 ## Useful
 
 ### Get the size of a bucket
