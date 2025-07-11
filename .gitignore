@@ -2,3 +2,6 @@ list-*
 done-*
 log-*
 dump-*
+kv.json
+.wrangler
+node_modules
