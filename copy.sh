@@ -22,7 +22,7 @@ sync_bucket() {
   DST="hlx-r2:aem-content/${BUCKET_NAME}"
 
   # Start rclone in the background
-  rclone copy --transfers 1000 --checkers 1000 -vv --dump headers --log-file="$DUMP_FILE" --progress --inplace --no-check-dest --fast-list --metadata --ignore-size "$SRC" "$DST" > "$LOG_FILE" 2>&1 &
+  rclone copy --transfers 500 --checkers 500 -vv --dump headers --log-file="$DUMP_FILE" --progress --inplace --fast-list --metadata --no-gzip-encoding --s3-decompress --metadata-set content-encoding=identity --ignore-times --ignore-size "$SRC" "$DST" > "$LOG_FILE" 2>&1 &
   RCLONE_PID=$!
 
   # Monitor the dump file for changes in the foreground
@@ -32,7 +32,7 @@ sync_bucket() {
       NOW=$(date +%s)
       MODIFIED=$(stat -f %m "$DUMP_FILE")
       AGE=$((NOW - MODIFIED))
-      if [ $AGE -ge 15 ]; then
+      if [ $AGE -ge 150 ]; then
         echo "[${BUCKET_NAME}] Dump file unchanged for 15s, killing rclone (PID $RCLONE_PID)" >&2
         kill $RCLONE_PID
         wait $RCLONE_PID 2>/dev/null
@@ -53,13 +53,14 @@ sync_bucket() {
 
   if [ "$TIMEOUT" -eq 1 ]; then
     echo "$BUCKET_NAME, ${DURATION}s, $TRANSFERRED_SIZE, $NUM_FILES, TIMEOUT" >> done-copy.txt
-    rm -f "$LOG_FILE" "$DUMP_FILE"
+    echo "[${BUCKET_NAME}] Copy ended with timeout at $(date) (Duration: ${DURATION}s)"
+    # rm -f "$LOG_FILE" "$DUMP_FILE"
     return 0
   elif [ $STATUS -eq 0 ]; then
     echo "[${BUCKET_NAME}] Copy completed successfully."
     echo "$BUCKET_NAME, ${DURATION}s, $TRANSFERRED_SIZE, $NUM_FILES" >> done-copy.txt
     echo "[${BUCKET_NAME}] Copy ended at $(date) (Duration: ${DURATION}s)"
-    rm -f "$LOG_FILE" "$DUMP_FILE"
+    # rm -f "$LOG_FILE" "$DUMP_FILE"
     return 0
   else
     echo "[${BUCKET_NAME}] Copy ended with error or was killed. (Duration: ${DURATION}s)" >&2
